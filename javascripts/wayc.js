@@ -1,13 +1,56 @@
-function updateScore(team, score) {
+var beadPoints = [ 0, -300, -200, -100,  50 ];
+var axePoints  = [ 0,  300,  200,  100, -50 ];
+var currentRound = 0;
+var numTeams = 0;
+
+function updateScores() {
+    var numAxes = [ 0, 0 ];
+    var numBeads = [ 0, 0 ];
+    for (var i=0; i<8; ++i) {
+        var index = Math.floor(i/4);
+        var name = teams[i].name;
+        if (teams[i].votes[currentRound] == 'beads') {
+            numBeads[index]++;
+        }
+        else if (teams[i].votes[currentRound] == 'axe') {
+            numAxes[index]++;
+        }
+    }
+    var numVotes = [ (numAxes[0] + numBeads[0]), (numAxes[1] + numBeads[1]) ];
+    for (var i=0; i<2; ++i) {
+        if (numVotes[i] != 4) {
+            console.log("Number of votes in Group " + i + ": " + numVotes[i]);
+            alert("Not all votes have been recorded.");
+            return;
+        }
+    }
+    for (var i=0; i<8; ++i) {
+        var index = Math.floor(i/4);
+        var name = teams[i].name;
+        var points = ( teams[i].votes[currentRound] == 'beads' ?
+                       beadPoints[numBeads[index]] :
+                       axePoints[numAxes[index]] );
+        updateTeamScore(teams[i], points);
+        console.log("Team " + teams[i].name + " gets " + points + " points.");
+        teams[i].imgAxe.style.backgroundColor = 'rgba(0,127,127,0.0)';
+        teams[i].imgBeads.style.backgroundColor = 'rgba(0,127,127,0.0)';
+    }
+    currentRound++;
+}
+
+function updateTeamScore(team, score) {
     team.score += score;
     team.divScore.textContent = String(team.score);
 }
 
 function Team(name) {
+    this.teamNumber = numTeams++;
     this.name = name;
     this.score = 0;
     this.votes = [];
  
+    this.div = document.createElement('div');
+    
     this.divTeam = document.createElement('div');
     this.divTeam.className = 'team';
     //this.divTeam.style.backgroundColor = 'rgba(0,127,127,0.5)';
@@ -23,26 +66,45 @@ function Team(name) {
         
     }, false);
 
-    this.divAxe = document.createElement('div');
-    this.divAxe.className = 'image';
-    this.divAxe.style.left = '20%';
-    var imgAxe = document.createElement( 'img' );
-    imgAxe.className = 'axe';
-    imgAxe.src = 'images/axe_and_log.gif';
-    this.divAxe.appendChild( imgAxe );
-
-    this.divBeads = document.createElement('div');
-    this.divBeads.className = 'image';
-    this.divBeads.style.right = '20%';
-    var imgBeads = document.createElement( 'img' );
-    imgBeads.className = 'beads';
-    imgBeads.src = 'images/beads.gif';
-    this.divBeads.appendChild( imgBeads );
-
 		this.divTeam.appendChild( this.divName );
     this.divTeam.appendChild( this.divScore );
-    this.divTeam.appendChild( this.divAxe );
-    this.divTeam.appendChild( this.divBeads );
+
+    this.divBallot = document.createElement('div');
+    this.divBallot.className = 'ballot';
+
+    this.imgAxe = document.createElement( 'img' );
+    this.imgAxe.className = 'axe';
+    this.imgAxe.src = 'images/axe_and_log.gif';
+    this.imgAxe.id = 'axe_' + String(this.teamNumber);
+    this.imgAxe.addEventListener( 'click', function( event ) {
+        var index = this.id.split('_')[1];
+        teams[index].votes[currentRound] = 'axe';
+        console.log("Team: " + teams[index].name +
+                    " votes " + teams[index].votes[currentRound]);
+        teams[index].imgAxe.style.backgroundColor = 'rgba(0,127,127,0.75)';
+        teams[index].imgBeads.style.backgroundColor = 'rgba(0,127,127,0.0)';
+    }, false );
+
+    this.imgBeads = document.createElement( 'img' );
+    this.imgBeads.className = 'beads';
+    this.imgBeads.src = 'images/beads.gif';
+    this.imgBeads.id = 'beads_' + String(this.teamNumber);
+    this.imgBeads.addEventListener( 'click', function( event ) {
+        var index = this.id.split('_')[1];
+        teams[index].votes[currentRound] = 'beads';
+        console.log("Team: " + teams[index].name +
+                    " votes " + teams[index].votes[currentRound]);
+        teams[index].imgAxe.style.backgroundColor = 'rgba(0,127,127,0.0)';
+        teams[index].imgBeads.style.backgroundColor = 'rgba(0,127,127,0.75)';
+    }, false );
+
+    this.divBallot.appendChild( this.imgAxe );
+    this.divBallot.appendChild( this.imgBeads );
+    this.divBallot.style.visibility = 'visible';
+
+    // Add team info and team ballot to the main widget
+    this.div.appendChild( this.divTeam );
+    this.div.appendChild( this.divBallot );
 }
 
 var teamNames = [
@@ -55,7 +117,7 @@ var controls;
 
 var objects = [];
 var targets = { table: [], sphere: [], helix: [], grid: [] };
-
+var teams = [];
 
 function init() {
     var aspect = window.innerWidth / window.innerHeight;
@@ -69,8 +131,9 @@ function init() {
 		for ( var i=0; i<teamNames.length; ++i ) {
 
 				var team = new Team(teamNames[i]);
+        teams.push(team);
 
-				var object = new THREE.CSS3DObject( team.divTeam );
+				var object = new THREE.CSS3DObject( team.div );
 				object.position.x = Math.random() * 4000 - 2000;
 				object.position.y = Math.random() * 4000 - 2000;
 				object.position.z = Math.random() * 4000 - 2000;
@@ -83,7 +146,7 @@ function init() {
         var y = i%4;
 				var object = new THREE.Object3D();
 
-				object.position.x = ( x*1000 ) - 750;
+				object.position.x = ( x*1000 ) - 500;
 				object.position.y = - ( y*180 ) + 400;
 
 				targets.table.push( object );
@@ -144,7 +207,7 @@ function init() {
 
 				var object = new THREE.Object3D();
 
-				object.position.x = ( ( i % 2 ) * 500 ) - 500;
+				object.position.x = ( ( i % 2 ) * 670 ) - 670;
 				object.position.y = ( - ( Math.floor( i / 2 ) % 2 ) * 400 ) + 400;
 				object.position.z = ( Math.floor( i / 4 ) ) * 1000 - 2000;
 
@@ -161,11 +224,11 @@ function init() {
 
 		//
 
-		controls = new THREE.TrackballControls( camera, renderer.domElement );
-		controls.rotateSpeed = 0.5;
-		controls.minDistance = 500;
-		controls.maxDistance = 6000;
-		controls.addEventListener( 'change', render );
+		//controls = new THREE.TrackballControls( camera, renderer.domElement );
+		//controls.rotateSpeed = 0.5;
+		//controls.minDistance = 500;
+		//controls.maxDistance = 6000;
+		//controls.addEventListener( 'change', render );
 
 		var button = document.getElementById( 'table' );
 		button.addEventListener( 'click', function ( event ) {
@@ -193,6 +256,12 @@ function init() {
 
 				transform( targets.grid, 2000 );
 
+		}, false );
+
+		var buttonTally = document.getElementById( 'tally' );
+		buttonTally.addEventListener( 'click', function ( event ) {
+        console.log("Tallying scores.");
+        updateScores();
 		}, false );
 
 		transform( targets.table, 2000 );
@@ -248,7 +317,7 @@ function animate() {
 
 		TWEEN.update();
 
-		controls.update();
+		//controls.update();
 
 }
 
