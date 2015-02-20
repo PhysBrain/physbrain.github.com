@@ -1,13 +1,53 @@
+function updateScore(team, score) {
+    team.score += score;
+    team.divScore.textContent = String(team.score);
+}
 
-var table = [
-		"Hydrogen", "Team 1", "1.00794", 0, 1,
-		"Helium", "Team 2", "4.002602", 1, 1,
-		"Lithium", "Team 3", "6.941", 0, 2,
-		"Beryllium", "Team 4", "9.012182", 1, 2,
-		"Boron", "Team 5", "10.811", 3, 1,
-		"Carbon", "Team 6", "12.0107", 4, 1,
-		"Nitrogen", "Team 7", "14.0067", 3, 2,
-		"Oxygen", "Team 8", "15.9994", 4, 2
+function Team(name) {
+    this.name = name;
+    this.score = 0;
+    this.votes = [];
+ 
+    this.divTeam = document.createElement('div');
+    this.divTeam.className = 'team';
+    //this.divTeam.style.backgroundColor = 'rgba(0,127,127,0.5)';
+ 
+ 		this.divName = document.createElement( 'div' );
+		this.divName.className = 'name';
+		this.divName.textContent = name;
+
+    this.divScore = document.createElement( 'div' );
+    this.divScore.className = 'score';
+		this.divScore.textContent = this.score;
+    this.divScore.addEventListener( 'click', function( event ) {
+        
+    }, false);
+
+    this.divAxe = document.createElement('div');
+    this.divAxe.className = 'image';
+    this.divAxe.style.left = '20%';
+    var imgAxe = document.createElement( 'img' );
+    imgAxe.className = 'axe';
+    imgAxe.src = 'images/axe_and_log.gif';
+    this.divAxe.appendChild( imgAxe );
+
+    this.divBeads = document.createElement('div');
+    this.divBeads.className = 'image';
+    this.divBeads.style.right = '20%';
+    var imgBeads = document.createElement( 'img' );
+    imgBeads.className = 'beads';
+    imgBeads.src = 'images/beads.gif';
+    this.divBeads.appendChild( imgBeads );
+
+		this.divTeam.appendChild( this.divName );
+    this.divTeam.appendChild( this.divScore );
+    this.divTeam.appendChild( this.divAxe );
+    this.divTeam.appendChild( this.divBeads );
+}
+
+var teamNames = [
+    "Hydrogen", "Helium", "Lithium", "Beryllium",
+    "Boron", "Carbon", "Nitrogen", "Oxygen"
 ];
 
 var camera, scene, renderer;
@@ -18,36 +58,19 @@ var targets = { table: [], sphere: [], helix: [], grid: [] };
 
 
 function init() {
-
-		camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 10000 );
+    var aspect = window.innerWidth / window.innerHeight;
+		camera = new THREE.PerspectiveCamera( 40, aspect, 1, 10000 );
 		camera.position.z = 2000;
 
 		scene = new THREE.Scene();
 
 		// table
 
-		for ( var i = 0; i < table.length; i += 5 ) {
+		for ( var i=0; i<teamNames.length; ++i ) {
 
-				var element = document.createElement( 'div' );
-				element.className = 'element';
-				element.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
+				var team = new Team(teamNames[i]);
 
-				var number = document.createElement( 'div' );
-				number.className = 'number';
-				number.textContent = (i/5) + 1;
-				element.appendChild( number );
-
-				var symbol = document.createElement( 'div' );
-				symbol.className = 'symbol';
-				symbol.textContent = table[ i ];
-				element.appendChild( symbol );
-
-				var details = document.createElement( 'div' );
-				details.className = 'details';
-				details.innerHTML = table[ i + 1 ] + '<br>' + table[ i + 2 ];
-				element.appendChild( details );
-
-				var object = new THREE.CSS3DObject( element );
+				var object = new THREE.CSS3DObject( team.divTeam );
 				object.position.x = Math.random() * 4000 - 2000;
 				object.position.y = Math.random() * 4000 - 2000;
 				object.position.z = Math.random() * 4000 - 2000;
@@ -56,10 +79,11 @@ function init() {
 				objects.push( object );
 
 				//
-        var x = table[i+3];
-        var y = table[i+4];
+        var x = Math.floor(i/4);
+        var y = i%4;
 				var object = new THREE.Object3D();
-				object.position.x = ( x*500 ) - 1000;
+
+				object.position.x = ( x*1000 ) - 750;
 				object.position.y = - ( y*180 ) + 400;
 
 				targets.table.push( object );
@@ -77,9 +101,9 @@ function init() {
 
 				var object = new THREE.Object3D();
 
-				object.position.x = 800 * Math.cos( theta ) * Math.sin( phi );
-				object.position.y = 800 * Math.sin( theta ) * Math.sin( phi );
-				object.position.z = 800 * Math.cos( phi );
+				object.position.x = 500 * Math.cos( theta ) * Math.sin( phi );
+				object.position.y = 500 * Math.sin( theta ) * Math.sin( phi );
+				object.position.z = 500 * Math.cos( phi );
 
 				vector.copy( object.position ).multiplyScalar( 2 );
 
@@ -99,9 +123,10 @@ function init() {
 
 				var object = new THREE.Object3D();
 
-				object.position.x = 1000 * Math.sin( phi );
-				object.position.y = - ( i * 8 ) + 450;
-				object.position.z = 1000 * Math.cos( phi );
+				object.position.x = 800 * Math.sin( phi );
+				// object.position.y = - ( i * 8 ) + 450;
+				object.position.y = 250;
+				object.position.z = 800 * Math.cos( phi );
 
 				vector.x = object.position.x * 2;
 				vector.y = object.position.y;
