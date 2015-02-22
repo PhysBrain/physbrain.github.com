@@ -352,7 +352,7 @@ function init() {
 
 function transform( sources, targets, duration ) {
 
-    TWEEN.removeAll();
+    //TWEEN.removeAll();
 
 		for ( var i = 0; i < sources.length; i ++ ) {
 
