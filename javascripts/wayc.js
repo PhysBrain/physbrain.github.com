@@ -3,6 +3,40 @@ var axePoints  = [ 0,  300,  200,  100, -50 ];
 var currentRound = 0;
 var numTeams = 0;
 
+var groupScore = [ 0, 0 ];
+var objects = { title: [], teams: [] };
+var targets = { rank: [], sphere: [], helix: [], grid: [], random: [],
+                wayc: [], yacw: [] };
+
+function initTitle() {
+    var words = [ 'Win', 'All', 'You', 'Can' ];
+    var idx1 = [ 0, 1, 2, 3 ];
+    var idx2 = [ 3, 1, 0, 2 ];
+    for (var i=0; i<4; ++i) {
+        var word = document.createElement('span');
+        word.className = 'title';
+        word.textContent = words[i];
+        var object = new THREE.CSS3DObject(word);
+        object.position.x = Math.random()*4000 - 2000;
+        object.position.y = Math.random()*4000 - 2000;
+        object.position.z = Math.random()*4000 - 2000;
+        scene.add(object);
+        objects.title.push(object);
+
+        var obj1 = new THREE.Object3D();
+        obj1.position.x = idx1[i]*220 - 400;
+        obj1.position.y = 800;
+        obj1.position.z = 1000;
+        targets.wayc.push(obj1);
+
+        var obj2 = new THREE.Object3D();
+        obj2.position.x = idx2[i]*220 - 400;
+        obj2.position.y = 800;
+        obj2.position.z = 1000;
+        targets.yacw.push(obj2);
+    }
+}
+
 function updateScores() {
     var numAxes = [ 0, 0 ];
     var numBeads = [ 0, 0 ];
@@ -16,39 +50,62 @@ function updateScores() {
             numAxes[index]++;
         }
     }
-    var numVotes = [ (numAxes[0] + numBeads[0]), (numAxes[1] + numBeads[1]) ];
     for (var i=0; i<2; ++i) {
-        if (numVotes[i] != 4) {
-            console.log("Number of votes in Group " + i + ": " + numVotes[i]);
-            alert("Not all votes have been recorded.");
+        var numVotes = numAxes[i] + numBeads[i];
+        if (numVotes != 4) {
+            alert("Only " + numVotes + " have been cast in Group " + i);
             return;
         }
+        groupScore[i] += (numBeads[i] == 4 ? 200 : numAxes[i] == 4 ? -200 : 0);
     }
     for (var i=0; i<8; ++i) {
-        var index = Math.floor(i/4);
         var name = teams[i].name;
+        var group = teams[i].group;
         var points = ( teams[i].votes[currentRound] == 'beads' ?
-                       beadPoints[numBeads[index]] :
-                       axePoints[numAxes[index]] );
-        updateTeamScore(teams[i], points);
+                       beadPoints[numBeads[group]] :
+                       axePoints[numAxes[group]] );
+        updateTeamScore(i, group, points);
         console.log("Team " + teams[i].name + " gets " + points + " points.");
-        teams[i].imgAxe.style.backgroundColor = 'rgba(0,127,127,0.0)';
-        teams[i].imgBeads.style.backgroundColor = 'rgba(0,127,127,0.0)';
     }
     currentRound++;
+
+    // Refresh the display to reflect the rankings
+		transform( objects.teams, targets.rank, 2000 );
 }
 
-function updateTeamScore(team, score) {
-    team.score += score;
-    team.divScore.textContent = String(team.score);
+function updateTeamScore(team, group, points) {
+    // Update the team's score
+    teams[team].score += points;
+    teams[team].divScore.textContent = String(teams[team].score);
+
+    // Modify the position of the widget in rank view
+    targets.rank[team].position.y = teams[team].score;
+    targets.rank[team].position.z = groupScore[group];
+
+    // Modify the position of the widget in grid view
+    targets.grid[team].position.z = groupScore[group];
+
+    // Clear the background highlight for the selected item
+    teams[team].imgAxe.style.backgroundColor = 'rgba(0,127,127,0.0)';
+    teams[team].imgBeads.style.backgroundColor = 'rgba(0,127,127,0.0)';
+
+    // Add an icon to the team history widget
+    var img = document.createElement('img');
+    img.className = 'icon';
+    img.src = ( teams[team].votes[currentRound] == 'axe' ?
+                'images/axe_and_log.gif' : 'images/beads3.gif' );
+    img.style.left = currentRound*40 - 240;
+    teams[team].divHistory.appendChild( img );
+
 }
 
 function Team(name) {
-    this.teamNumber = numTeams++;
+    this.group = (numTeams < 4 ? 0 : 1);
+    this.number = numTeams++;
     this.name = name;
     this.score = 0;
     this.votes = [];
- 
+
     this.div = document.createElement('div');
     
     this.divTeam = document.createElement('div');
@@ -75,7 +132,7 @@ function Team(name) {
     this.imgAxe = document.createElement( 'img' );
     this.imgAxe.className = 'axe';
     this.imgAxe.src = 'images/axe_and_log.gif';
-    this.imgAxe.id = 'axe_' + String(this.teamNumber);
+    this.imgAxe.id = 'axe_' + String(this.number);
     this.imgAxe.addEventListener( 'click', function( event ) {
         var index = this.id.split('_')[1];
         teams[index].votes[currentRound] = 'axe';
@@ -88,7 +145,7 @@ function Team(name) {
     this.imgBeads = document.createElement( 'img' );
     this.imgBeads.className = 'beads';
     this.imgBeads.src = 'images/beads.gif';
-    this.imgBeads.id = 'beads_' + String(this.teamNumber);
+    this.imgBeads.id = 'beads_' + String(this.number);
     this.imgBeads.addEventListener( 'click', function( event ) {
         var index = this.id.split('_')[1];
         teams[index].votes[currentRound] = 'beads';
@@ -102,9 +159,19 @@ function Team(name) {
     this.divBallot.appendChild( this.imgBeads );
     this.divBallot.style.visibility = 'visible';
 
+    this.divHistory = document.createElement('div');
+    this.divHistory.className = 'history';
+
     // Add team info and team ballot to the main widget
     this.div.appendChild( this.divTeam );
     this.div.appendChild( this.divBallot );
+    this.div.appendChild( this.divHistory );
+
+    this.object = new THREE.CSS3DObject( this.div );
+		this.object.position.x = Math.random() * 4000 - 2000;
+		this.object.position.y = Math.random() * 4000 - 2000;
+		this.object.position.z = Math.random() * 4000 - 2000;
+
 }
 
 var teamNames = [
@@ -115,41 +182,45 @@ var teamNames = [
 var camera, scene, renderer;
 var controls;
 
-var objects = [];
-var targets = { table: [], sphere: [], helix: [], grid: [] };
 var teams = [];
 
 function init() {
     var aspect = window.innerWidth / window.innerHeight;
 		camera = new THREE.PerspectiveCamera( 40, aspect, 1, 10000 );
-		camera.position.z = 2000;
+		camera.position.z = 4000;
 
 		scene = new THREE.Scene();
 
-		// table
+    initTitle();
+    transform( objects.title, targets.wayc, 1000 );
+    //transform( objects.title, targets.yacw, 1000 );
+
+    // init teams
 
 		for ( var i=0; i<teamNames.length; ++i ) {
 
 				var team = new Team(teamNames[i]);
         teams.push(team);
+		    scene.add( team.object );
+		    objects.teams.push( team.object );
 
-				var object = new THREE.CSS3DObject( team.div );
+				var object = new THREE.Object3D();
+        object.position.x = ( team.number*500 ) - 1875 + team.group*250;
+        object.position.y = team.score*100 + 200;
+        targets.rank.push(object);
+    }
+
+		// random
+
+		for ( var i=0; i<objects.teams.length; ++i ) {
+
+				var object = new THREE.Object3D();
+
 				object.position.x = Math.random() * 4000 - 2000;
 				object.position.y = Math.random() * 4000 - 2000;
 				object.position.z = Math.random() * 4000 - 2000;
-				scene.add( object );
 
-				objects.push( object );
-
-				//
-        var x = Math.floor(i/4);
-        var y = i%4;
-				var object = new THREE.Object3D();
-
-				object.position.x = ( x*1000 ) - 500;
-				object.position.y = - ( y*180 ) + 400;
-
-				targets.table.push( object );
+        targets.random.push( object );
 
 		}
 
@@ -157,7 +228,7 @@ function init() {
 
 		var vector = new THREE.Vector3();
 
-		for ( var i = 0, l = objects.length; i < l; i ++ ) {
+		for ( var i = 0, l = objects.teams.length; i < l; i ++ ) {
 
 				var phi = Math.acos( -1 + ( 2 * i ) / l );
 				var theta = Math.sqrt( l * Math.PI ) * phi;
@@ -180,16 +251,15 @@ function init() {
 
 		var vector = new THREE.Vector3();
 
-		for ( var i = 0, l = objects.length; i < l; i ++ ) {
+		for ( var i = 0, l = objects.teams.length; i < l; i ++ ) {
 
-				var phi = i * 0.25 * Math.PI;
+				var phi = i * 0.5 * Math.PI + teams[i].group * 0.25 * Math.PI;
 
 				var object = new THREE.Object3D();
 
-				object.position.x = 800 * Math.sin( phi );
-				// object.position.y = - ( i * 8 ) + 450;
-				object.position.y = 250;
-				object.position.z = 800 * Math.cos( phi );
+				object.position.x = 500 * Math.sin( phi );
+				object.position.y = 250 + teams[i].group*400;
+				object.position.z = 500 * Math.cos( phi );
 
 				vector.x = object.position.x * 2;
 				vector.y = object.position.y;
@@ -203,13 +273,14 @@ function init() {
 
 		// grid
 
-		for ( var i = 0; i < objects.length; i ++ ) {
+		for ( var i = 0; i < objects.teams.length; i ++ ) {
 
 				var object = new THREE.Object3D();
 
-				object.position.x = ( ( i % 2 ) * 670 ) - 670;
-				object.position.y = ( - ( Math.floor( i / 2 ) % 2 ) * 400 ) + 400;
-				object.position.z = ( Math.floor( i / 4 ) ) * 1000 - 2000;
+				object.position.x = ( ( i % 2 ) * 500 ) + teams[i].group * 1500 - 1000 ;
+				object.position.y = ( - ( Math.floor( i / 2 ) % 2 ) * 400 ) + 200;
+				//object.position.z = ( Math.floor( i / 4 ) ) * 1000 - 2000;
+				object.position.z = groupScore[teams[i].group]
 
 				targets.grid.push( object );
 
@@ -224,37 +295,44 @@ function init() {
 
 		//
 
-		//controls = new THREE.TrackballControls( camera, renderer.domElement );
-		//controls.rotateSpeed = 0.5;
-		//controls.minDistance = 500;
-		//controls.maxDistance = 6000;
-		//controls.addEventListener( 'change', render );
+		controls = new THREE.TrackballControls( camera, renderer.domElement );
+		controls.rotateSpeed = 0.0;
+		controls.minDistance = 500;
+		controls.maxDistance = 6000;
+		controls.addEventListener( 'change', render );
 
-		var button = document.getElementById( 'table' );
+		var button = document.getElementById( 'rank' );
 		button.addEventListener( 'click', function ( event ) {
 
-				transform( targets.table, 2000 );
+				transform( objects.teams, targets.rank, 2000 );
 
 		}, false );
 
 		var button = document.getElementById( 'sphere' );
 		button.addEventListener( 'click', function ( event ) {
 
-				transform( targets.sphere, 2000 );
+				transform( objects.teams, targets.sphere, 2000 );
 
 		}, false );
 
 		var button = document.getElementById( 'helix' );
 		button.addEventListener( 'click', function ( event ) {
 
-				transform( targets.helix, 2000 );
+				transform( objects.teams, targets.helix, 2000 );
 
 		}, false );
 
 		var button = document.getElementById( 'grid' );
 		button.addEventListener( 'click', function ( event ) {
 
-				transform( targets.grid, 2000 );
+				transform( objects.teams, targets.grid, 2000 );
+
+		}, false );
+
+		var button = document.getElementById( 'random' );
+		button.addEventListener( 'click', function ( event ) {
+
+				transform( objects.teams, targets.random, 2000 );
 
 		}, false );
 
@@ -264,7 +342,7 @@ function init() {
         updateScores();
 		}, false );
 
-		transform( targets.table, 2000 );
+		transform( objects.teams, targets.rank, 2000 );
 
 		//
 
@@ -272,13 +350,13 @@ function init() {
 
 }
 
-function transform( targets, duration ) {
+function transform( sources, targets, duration ) {
 
-		TWEEN.removeAll();
+    TWEEN.removeAll();
 
-		for ( var i = 0; i < objects.length; i ++ ) {
+		for ( var i = 0; i < sources.length; i ++ ) {
 
-				var object = objects[ i ];
+				var object = sources[ i ];
 				var target = targets[ i ];
 
 				new TWEEN.Tween( object.position )
@@ -317,7 +395,7 @@ function animate() {
 
 		TWEEN.update();
 
-		//controls.update();
+		controls.update();
 
 }
 

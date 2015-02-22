@@ -13,12 +13,14 @@ a {
 		color: #ffffff;
 }
 
-#info {
+.title {
 		position: absolute;
-		width: 100%;
+		top: 20px;
+    width: 200;
+    height: 100;
 		color: #ffffff;
-		padding: 5px;
-		font-size: 60px;
+		padding: 10px;
+		font-size: 100px;
 		font-weight: bold;
 		color: rgba(255,255,255,0.75);
 		text-shadow: 0 0 10px rgba(0,255,255,0.95);
@@ -89,32 +91,38 @@ a {
 
 .ballot {
     position: absolute;
-    top: 0px;
-    width: 150px;
-    height: 160px;
-    left: 500px;
+    top: 180px;
+    left: 0px;
+    width: 480px;
+    height: 80px;
 		box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
 		border: 1px solid rgba(127,255,255,0.25);
 		background-color: rgba(0,127,127,0.5);
+    text-align: center;
     visibility: visible;
 }
 
 .ballot img {
-    position: absolute;
-    width: 80%;
+    height: 60px;
 		background-color: rgba(0,127,127,0.0);
+    padding: 10px;
 }
 
-.ballot .axe {
-    top: 10%;
-    left: 10%;
-    right: 10%;
+.history {
+    position: absolute;
+    top: 280px;
+    left: 0px;
+    width: 480px;
+    height: 50px;
+		box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
+		border: 1px solid rgba(127,255,255,0.25);
+		background-color: rgba(0,127,127,0.5);
+    visibility: hidden;
 }
 
-.ballot .beads {
-    bottom: 10%;
-    left: 10%;
-    right: 10%;
+.history .icon {
+    height: 40px;
+    padding: 5px;
 }
 
 button {
