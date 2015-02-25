@@ -4,37 +4,81 @@ var currentRound = 0;
 var numTeams = 0;
 
 var groupScore = [ 0, 0 ];
+var teams = [];
+var titleWords = [];
 var objects = { title: [], teams: [] };
 var targets = { rank: [], sphere: [], helix: [], grid: [], random: [],
                 wayc: [], yacw: [] };
+var updateTween = new TWEEN.Tween( this );
+
+function TitleWord(word) {
+    this.div = document.createElement('span');
+    this.div.className = 'title';
+    this.div.textContent = word;
+
+    this.object = new THREE.CSS3DObject( this.div );
+		this.object.position.x = Math.random() * 4000 - 2000;
+		this.object.position.y = Math.random() * 4000 - 2000;
+		this.object.position.z = Math.random() * 4000 - 2000;
+    this.object.position.tween = new TWEEN.Tween( this.object.position );
+
+    this.object.rotation.x = 0;
+    this.object.rotation.y = 0;
+    this.object.rotation.z = 0;
+		this.object.rotation.tween = new TWEEN.Tween( this.object.rotation );
+}
 
 function initTitle() {
     var words = [ 'Win', 'All', 'You', 'Can' ];
     var idx1 = [ 0, 1, 2, 3 ];
     var idx2 = [ 3, 1, 0, 2 ];
     for (var i=0; i<4; ++i) {
-        var word = document.createElement('span');
-        word.className = 'title';
-        word.textContent = words[i];
-        var object = new THREE.CSS3DObject(word);
-        object.position.x = Math.random()*4000 - 2000;
-        object.position.y = Math.random()*4000 - 2000;
-        object.position.z = Math.random()*4000 - 2000;
-        scene.add(object);
-        objects.title.push(object);
+        var word = new TitleWord(words[i]);
+        titleWords.push(word);
+
+        scene.add(word.object);
+        objects.title.push(word.object);
 
         var obj1 = new THREE.Object3D();
         obj1.position.x = idx1[i]*220 - 400;
         obj1.position.y = 800;
-        obj1.position.z = 1000;
+        obj1.position.z = 0;
         targets.wayc.push(obj1);
 
         var obj2 = new THREE.Object3D();
         obj2.position.x = idx2[i]*220 - 400;
         obj2.position.y = 800;
-        obj2.position.z = 1000;
+        obj2.position.z = 0;
         targets.yacw.push(obj2);
     }
+}
+
+function titleSplash() {
+    var duration = 1000;
+    var tweens = [];
+    for (var i=0; i<1; ++i) {
+
+        tweens.push( new TWEEN.Tween(objects.title[i].position)
+                     .to( { x: 0, y: 0, z: 1000 }, duration )
+                     .easing( TWEEN.Easing.Exponential.InOut ) );
+
+        tweens.push( new TWEEN.Tween(objects.title[i].postion)
+                     .to( { x: targets.wayc[i].position.x,
+                            y: targets.wayc[i].position.y,
+                            z: targets.wayc[i].position.z }, duration )
+                     .easing( TWEEN.Easing.Exponential.InOut ) );
+    }
+
+    for (var i=1; i<tweens.length; ++i) {
+        tweens[i-1].chain(tweens[i]);
+    }
+
+    tweens[0].start();
+
+		updateTween.stop()
+				.to( {}, tweens.length*duration )
+				.onUpdate( render )
+				.start();
 }
 
 function updateScores() {
@@ -70,6 +114,7 @@ function updateScores() {
     currentRound++;
 
     // Refresh the display to reflect the rankings
+    TWEEN.removeAll();
 		transform( objects.teams, targets.rank, 2000 );
 }
 
@@ -171,6 +216,12 @@ function Team(name) {
 		this.object.position.x = Math.random() * 4000 - 2000;
 		this.object.position.y = Math.random() * 4000 - 2000;
 		this.object.position.z = Math.random() * 4000 - 2000;
+    this.object.position.tween = new TWEEN.Tween( this.object.position );
+
+    this.object.rotation.x = 0;
+    this.object.rotation.y = 0;
+    this.object.rotation.z = 0;
+		this.object.rotation.tween = new TWEEN.Tween( this.object.rotation );
 
 }
 
@@ -182,7 +233,6 @@ var teamNames = [
 var camera, scene, renderer;
 var controls;
 
-var teams = [];
 
 function init() {
     var aspect = window.innerWidth / window.innerHeight;
@@ -332,15 +382,28 @@ function init() {
 		var button = document.getElementById( 'random' );
 		button.addEventListener( 'click', function ( event ) {
 
+        for (var i=0; i<targets.random.length; ++i) {
+				    targets.random[i].position.x = Math.random() * 2000 - 1000;
+				    targets.random[i].position.y = Math.random() * 2000 - 1000;
+				    targets.random[i].position.z = Math.random() * 2000 - 1000;
+        }
 				transform( objects.teams, targets.random, 2000 );
 
 		}, false );
 
 		var buttonTally = document.getElementById( 'tally' );
 		buttonTally.addEventListener( 'click', function ( event ) {
+
         console.log("Tallying scores.");
         updateScores();
+
 		}, false );
+
+    var buttonTitle = document.getElementById( 'splash' );
+    buttonTitle.addEventListener( 'click', function( event ) {
+        console.log("WIN ALL YOU CAN!");
+        titleSplash();
+    }, false );
 
 		transform( objects.teams, targets.rank, 2000 );
 
@@ -352,26 +415,28 @@ function init() {
 
 function transform( sources, targets, duration ) {
 
-    //TWEEN.removeAll();
+		for (var i=0; i<sources.length; ++i) {
+				var object = sources[i];
+				var target = targets[i];
 
-		for ( var i = 0; i < sources.length; i ++ ) {
-
-				var object = sources[ i ];
-				var target = targets[ i ];
-
-				new TWEEN.Tween( object.position )
-						.to( { x: target.position.x, y: target.position.y, z: target.position.z }, Math.random() * duration + duration )
+        object.position.tween.stop()
+            .to( { x: target.position.x,
+                   y: target.position.y,
+                   z: target.position.z },
+                 Math.random() * duration + duration )
 						.easing( TWEEN.Easing.Exponential.InOut )
 						.start();
-
-				new TWEEN.Tween( object.rotation )
-						.to( { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration )
+        
+        object.rotation.tween.stop()
+						.to( { x: target.rotation.x,
+                   y: target.rotation.y,
+                   z: target.rotation.z },
+                 Math.random() * duration + duration )
 						.easing( TWEEN.Easing.Exponential.InOut )
 						.start();
-
 		}
 
-		new TWEEN.Tween( this )
+		updateTween.stop()
 				.to( {}, duration * 2 )
 				.onUpdate( render )
 				.start();
