@@ -56,9 +56,10 @@ ul {
 
 .message {
     position: absolute;
+    width: 90%;
     top: 30%;
-    left: 0px;
-    right: 0px;
+    left: 5%;
+    right: 5%;
 		font-size: 64px;
 		font-weight: bold;
 		color: rgba(255,255,255,0.75);
