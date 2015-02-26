@@ -11,10 +11,10 @@
 		<script src="javascripts/renderers/CSS3DRenderer.js"></script>
     <script src="javascripts/ListeningToLearn.js"></script>
 	</head>
-	<body>
-    <div class="title">Listening To Learn</div>
-    
+	<body onLoad="selectPage(0)">
 		<div id="menu">
+			<button id="btn1" onClick="prevPage();">&lt</button>
+			<button id="btn1" onClick="selectPage(0);">0</button>
 			<button id="btn1" onClick="selectPage(1);">1</button>
 			<button id="btn2" onClick="selectPage(2);">2</button>
 			<button id="btn3" onClick="selectPage(3);">3</button>
@@ -24,25 +24,33 @@
 			<button id="btn7" onClick="selectPage(7);">7</button>
 			<button id="btn8" onClick="selectPage(8);">8</button>
 			<button id="btn9" onClick="selectPage(9);">9</button>
+			<button id="btn1" onClick="nextPage();">&gt</button>
 		</div>
 
-    <div class="page" id="page1">
+    <div class="page" id="page0">
+      <h1>Listening To Learn</h1>
+      <h2>Fox Patrol</h2>
+      <h3>Wood Badge S1-691-15</h3>
+      <h3>Pushmataha Area Coucil</h3>
+      <h3>February 27, 2015</h3>
+    </div>
+    <div class="page" id="page1" onClick="nextStep()">
       <div class="heading">Speaker/Listener Activity</div>
       <div class="details">
-        <div> Find a partner</div>
-        <div> Choose a speaker and a Listener</div>
-        <div> Speaker will talk for a minute or two</div>
-        <div> Listener will exhibit the provided behavior</div>
+        <div class="step">Find a partner</div>
+        <div class="step">Choose a speaker and a Listener</div>
+        <div class="step">Speaker will talk for a minute or two</div>
+        <div class="step">Listener will exhibit the provided behavior</div>
       </div>
       <div class="number">Page 1</div>
     </div>
 
-    <div class="page" id="page2">
+    <div class="page" id="page2"onClick="nextStep()">
       <div class="heading">Discussion</div>
       <div class="number">Page 2</div>
     </div>
 
-    <div class="page" id="page3">
+    <div class="page" id="page3" onClick="nextStep()">
       <div class="heading">Exercise in Effective Learning</div>
       <div class="number">Page 3</div>
     </div>
@@ -64,6 +72,13 @@
 
     <div class="page" id="page7">
       <div class="heading">Tips on Giving Feedback</div>
+      <ol>
+        <li>Consider your motives. Feedback should always be helpful.</li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ol>
       <div class="number">Page 7</div>
     </div>
 

@@ -13,16 +13,34 @@ a {
 		color: #ffffff;
 }
 
-.title {
-		position: absolute;
-		top: 20px;
-    width: 100%;
+h1 {
 		color: #ffffff;
 		padding: 10px;
-		font-size: 50px;
+		font-size: 64px;
 		font-weight: bold;
 		color: rgba(255,255,255,0.75);
 		text-shadow: 0 0 10px rgba(0,255,255,0.95);
+		text-align: center;
+		z-index: 1;
+}
+h2 {
+		color: #ffffff;
+		padding: 10px;
+		font-size: 48px;
+		font-weight: bold;
+		color: rgba(255,255,255,0.75);
+		text-shadow: 0 0 5px rgba(0,255,255,0.5);
+		text-align: center;
+		z-index: 1;
+}
+h3 {
+		color: #ffffff;
+    margin: 10px;
+		padding: 0px;
+		font-size: 32px;
+		font-weight: bold;
+		color: rgba(255,255,255,0.75);
+		text-shadow: 0 0 2px rgba(0,255,255,0.5);
 		text-align: center;
 		z-index: 1;
 }
@@ -67,6 +85,10 @@ a {
 		font-size: 48px;
 		color: rgba(255,255,255,0.75);
 		text-align: left;
+}
+
+.page .step {
+    visibility: hidden;
 }
 
 .page .highlighted {
