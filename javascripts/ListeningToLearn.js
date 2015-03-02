@@ -89,8 +89,6 @@ function initMenu() {
     button.innerHTML = "&gt&gt";
     button.addEventListener('click', nextSlide, false);
     menu.appendChild(button);
-
-		//<button id="btn1" onClick="selectSlide(0);">0</button>
 }
 
 function prevSlide() {
@@ -111,10 +109,18 @@ function nextSlide() {
 
 function prevStep() {
     slides[currSlide].prevStep();
+    if (slides[currSlide.currStep] < 1) {
+        prevSlide();
+    }
 }
 
 function nextStep() {
-    slides[currSlide].nextStep();
+    if (slides[currSlide].currStep < slides[currSlide].numSteps-1) {
+        slides[currSlide].nextStep();
+    }
+    else {
+        nextSlide();
+    }
 }
 
 function selectSlide(slideNum) {

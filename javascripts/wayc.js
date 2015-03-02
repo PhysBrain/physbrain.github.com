@@ -1,5 +1,12 @@
+var teamNames = [
+    "Dead<br>Cows", "Roberto<br>Blanco", "Sharp<br>Talent", "Swiper",
+    "TBD", "Red Headed<br>Step Children", "Buffalo<br>Chips", "Lone<br>Rangers"
+];
+
+var container;
 var beadPoints = [ 0, -300, -200, -100,  50 ];
 var axePoints  = [ 0,  300,  200,  100, -50 ];
+var roundMultiplier = [ 0, 1, 1, 1, 2, 2, 2, 5, 5, 5, 10 ];
 var currentRound = 0;
 var numTeams = 0;
 
@@ -11,15 +18,17 @@ var targets = { rank: [], sphere: [], helix: [], grid: [], random: [],
                 wayc: [], yacw: [] };
 var updateTween = new TWEEN.Tween( this );
 
-function TitleWord(word) {
+function TitleWord(word, i) {
     this.div = document.createElement('span');
     this.div.className = 'title';
     this.div.textContent = word;
+    this.div.style.visibility = 'visible';
+    titleWords.push(this.div);
 
     this.object = new THREE.CSS3DObject( this.div );
-		this.object.position.x = Math.random() * 4000 - 2000;
-		this.object.position.y = Math.random() * 4000 - 2000;
-		this.object.position.z = Math.random() * 4000 - 2000;
+		this.object.position.x = i*210 - 420;
+		this.object.position.y = 800;
+		this.object.position.z = 0;
     this.object.position.tween = new TWEEN.Tween( this.object.position );
 
     this.object.rotation.x = 0;
@@ -34,39 +43,24 @@ function initTitle() {
     var idx2 = [ 3, 1, 0, 2 ];
     for (var i=0; i<4; ++i) {
         var word = new TitleWord(words[i]);
-        titleWords.push(word);
-
+        titleWords.push(word, i);
         scene.add(word.object);
         objects.title.push(word.object);
-
-        var obj1 = new THREE.Object3D();
-        obj1.position.x = idx1[i]*220 - 400;
-        obj1.position.y = 800;
-        obj1.position.z = 0;
-        targets.wayc.push(obj1);
-
-        var obj2 = new THREE.Object3D();
-        obj2.position.x = idx2[i]*220 - 400;
-        obj2.position.y = 800;
-        obj2.position.z = 0;
-        targets.yacw.push(obj2);
     }
 }
 
-function titleSplash() {
+function titleSplash(order) {
     var duration = 1000;
     var tweens = [];
-    for (var i=0; i<1; ++i) {
 
-        tweens.push( new TWEEN.Tween(objects.title[i].position)
-                     .to( { x: 0, y: 0, z: 1000 }, duration )
-                     .easing( TWEEN.Easing.Exponential.InOut ) );
-
-        tweens.push( new TWEEN.Tween(objects.title[i].postion)
-                     .to( { x: targets.wayc[i].position.x,
-                            y: targets.wayc[i].position.y,
-                            z: targets.wayc[i].position.z }, duration )
-                     .easing( TWEEN.Easing.Exponential.InOut ) );
+    for (var i=0; i<4; ++i) {
+        //titleWords[i].div.style.visibility = true;
+        tweens.push( new TWEEN.Tween(objects.title[order[i]].position)
+                     .to( { x: 0, y: 0, z: 3500 }, duration )
+                     .easing( TWEEN.Easing.Exponential.InOut ));
+        tweens.push( new TWEEN.Tween(objects.title[order[i]].position)
+                     .to( { x: i*210-420, y: 800, z: 0 }, duration )
+                     .easing( TWEEN.Easing.Exponential.InOut ));
     }
 
     for (var i=1; i<tweens.length; ++i) {
@@ -74,7 +68,7 @@ function titleSplash() {
     }
 
     tweens[0].start();
-
+    
 		updateTween.stop()
 				.to( {}, tweens.length*duration )
 				.onUpdate( render )
@@ -100,22 +94,22 @@ function updateScores() {
             alert("Only " + numVotes + " have been cast in Group " + i);
             return;
         }
-        groupScore[i] += (numBeads[i] == 4 ? 200 : numAxes[i] == 4 ? -200 : 0);
+        groupScore[i] += roundMultiplier[currentRound]*(numBeads[i] == 4 ? 200 : numAxes[i] == 4 ? -200 : 0);
     }
     for (var i=0; i<8; ++i) {
         var name = teams[i].name;
         var group = teams[i].group;
-        var points = ( teams[i].votes[currentRound] == 'beads' ?
+        var points = roundMultiplier[currentRound]*( teams[i].votes[currentRound] == 'beads' ?
                        beadPoints[numBeads[group]] :
                        axePoints[numAxes[group]] );
         updateTeamScore(i, group, points);
         console.log("Team " + teams[i].name + " gets " + points + " points.");
     }
-    currentRound++;
 
     // Refresh the display to reflect the rankings
     TWEEN.removeAll();
 		transform( objects.teams, targets.rank, 2000 );
+
 }
 
 function updateTeamScore(team, group, points) {
@@ -128,7 +122,7 @@ function updateTeamScore(team, group, points) {
     targets.rank[team].position.z = groupScore[group];
 
     // Modify the position of the widget in grid view
-    targets.grid[team].position.z = groupScore[group];
+    targets.grid[team].position.z = 0.5*groupScore[group];
 
     // Clear the background highlight for the selected item
     teams[team].imgAxe.style.backgroundColor = 'rgba(0,127,127,0.0)';
@@ -159,7 +153,8 @@ function Team(name) {
  
  		this.divName = document.createElement( 'div' );
 		this.divName.className = 'name';
-		this.divName.textContent = name;
+		this.divName.innerHTML = name;
+    this.divName.style.width = 300;
 
     this.divScore = document.createElement( 'div' );
     this.divScore.className = 'score';
@@ -225,11 +220,6 @@ function Team(name) {
 
 }
 
-var teamNames = [
-    "Hydrogen", "Helium", "Lithium", "Beryllium",
-    "Boron", "Carbon", "Nitrogen", "Oxygen"
-];
-
 var camera, scene, renderer;
 var controls;
 
@@ -241,9 +231,7 @@ function init() {
 
 		scene = new THREE.Scene();
 
-    initTitle();
-    transform( objects.title, targets.wayc, 1000 );
-    //transform( objects.title, targets.yacw, 1000 );
+    //initTitle();
 
     // init teams
 
@@ -256,7 +244,7 @@ function init() {
 
 				var object = new THREE.Object3D();
         object.position.x = ( team.number*500 ) - 1875 + team.group*250;
-        object.position.y = team.score*100 + 200;
+        object.position.y = team.score*100;
         targets.rank.push(object);
     }
 
@@ -341,7 +329,8 @@ function init() {
 		renderer = new THREE.CSS3DRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight );
 		renderer.domElement.style.position = 'absolute';
-		document.getElementById( 'container' ).appendChild( renderer.domElement );
+		container = document.getElementById( 'container' );
+    container.appendChild( renderer.domElement );
 
 		//
 
@@ -401,16 +390,56 @@ function init() {
 
     var buttonTitle = document.getElementById( 'splash' );
     buttonTitle.addEventListener( 'click', function( event ) {
-        console.log("WIN ALL YOU CAN!");
-        titleSplash();
+        var elemTitle = document.querySelectorAll('.title')[0];
+        if (!elemTitle) {
+            elemTitle = document.createElement('div');
+            elemTitle.className = 'title';
+            container.appendChild(elemTitle);
+        }
+        if (currentRound < 10) {
+            elemTitle.innerHTML = 'Win All You Can!';
+        }
+        else {
+            elemTitle.innerHTML = 'You All Can Win!';
+        }
+        elemTitle.style.visibility = !(elemTitle.style.visibility);
     }, false );
+
+    var buttonAdvance = document.getElementById('advance');
+    buttonAdvance.addEventListener('click', function(event) {
+        currentRound++;
+        var elemBanner = document.querySelectorAll('.banner')[0];
+        if (!elemBanner) {
+            elemBanner = document.createElement('div');
+            elemBanner.className = 'banner';
+            container.appendChild(elemBanner);
+        }
+        elemBanner.innerHTML = ('Round <span id="round">' +
+                                String(currentRound) + '</span>');
+        elemBanner.style.visibility = (currentRound > 0);
+        if (currentRound > 3) {
+            var elemBonus = document.querySelectorAll('.bonus')[0];
+            if (!elemBonus) {
+                elemBonus = document.createElement('div');
+                elemBonus.className = 'bonus';
+                container.appendChild(elemBonus);
+            }
+            elemBonus.innerHTML = ('Point values are now ' +
+                                   (currentRound < 7 ?
+                                    'doubled!' :
+                                    currentRound < 10 ?
+                                    'worth 5 times their original amount!' :
+                                    'worth 10 times their original amount!'));
+        }
+        render();
+    }, false);
 
 		transform( objects.teams, targets.rank, 2000 );
 
 		//
 
 		window.addEventListener( 'resize', onWindowResize, false );
-
+    
 }
 
 function transform( sources, targets, duration ) {
