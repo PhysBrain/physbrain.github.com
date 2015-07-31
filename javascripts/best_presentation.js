@@ -1,6 +1,31 @@
 var tileNames = [
     "BEST", "Math", "Physics", "Modeling",
-    "Gravity", "Friction"
+    "Gravity", "Friction", "Strategy"
+];
+
+var tileHTML = [
+    '<ul><li>first</li><li>second</li></ul>',
+    '<ul><li>first</li><li>second</li></ul>',
+    '<ul><li>first</li><li>second</li></ul>',
+    '<ul><li>first</li><li>second</li></ul>',
+    '<ul><li>first</li><li>second</li></ul>',
+    '<ul><li>first</li><li>second</li></ul>',
+    // Strategy
+    '\
+<table class="table"> \
+  <tr> \
+    <td>OSOW Pressed</td> \
+    <td><input type="checkbox" name="osow"></td> \
+  </tr> \
+  <tr> \
+    <td>Chickens Saved</td> \
+    <td><input type="number" name="saved" min="0" max="3"></td> \
+  </tr> \
+  <tr> \
+    <td>Chickens Killed</td> \
+    <td><input type="number" name="killed" min="0" max="3"></td> \
+  </tr> \
+</table>'
 ];
 
 var container;
@@ -19,10 +44,19 @@ function makeTileCurrent(index) {
     }
     targets.pres[index] = new THREE.Object3D();
     targets.pres[index].position.set(0, 0, 5100);
-    //tiles[currentTile].div.style.backgroundColor = 'rgba(0,127,127,0.0';
-    //tiles[index].div.style.backgroundColor = 'rgba(0,127,127,0.75';
+    //tiles[currentTile].div.style.backgroundColor = 'rgba(0,127,127,0.0)';
+    //tiles[index].div.style.backgroundColor = 'rgba(0,127,127,0.75)';
     currentTile = index;
 		transform( objects.tiles, targets.pres, 1000 );
+
+    var elemBanner = document.querySelectorAll('.banner')[0];
+    if (!elemBanner) {
+        elemBanner = document.createElement('div');
+        elemBanner.className = 'banner';
+        container.appendChild(elemBanner);
+    }
+    elemBanner.innerHTML = ('<span id="round">' +
+                            tileNames[currentTile] + '</span>');
 }
 
 function Tile(name) {
@@ -31,29 +65,27 @@ function Tile(name) {
     this.name = name;
 
     this.div = document.createElement('div');
+    this.div.className = 'tile';
     this.div.id = "Tile_" + String(this.number);
     this.div.addEventListener( 'click', function( event ) {
         var index = Number(this.id.split('_')[1]);
         makeTileCurrent(index);
     }, false );
 
-    this.divTile = document.createElement('div');
-    this.divTile.className = 'tile';
- 
  		this.divName = document.createElement( 'div' );
 		this.divName.className = 'name';
-		this.divName.innerHTML = name;
+		this.divName.innerHTML = this.name;
     this.divName.style.width = 300;
 
     this.divScore = document.createElement( 'div' );
-    this.divScore.className = 'score';
-		this.divScore.textContent = this.score;
+    this.divScore.className = '';
+		this.divScore.innerHTML = tileHTML[this.number];
     this.divScore.addEventListener( 'click', function( event ) {
         
     }, false);
 
-		this.divTile.appendChild( this.divName );
-    this.divTile.appendChild( this.divScore );
+		this.div.appendChild( this.divName );
+    this.div.appendChild( this.divScore );
 
     // this.divBallot = document.createElement('div');
     // this.divBallot.className = 'ballot';
@@ -83,7 +115,7 @@ function Tile(name) {
     // this.divBallot.style.visibility = 'visible';
 
     // Add tile info and tile ballot to the main widget
-    this.div.appendChild( this.divTile );
+    // this.div.appendChild( this.divTile );
     // this.div.appendChild( this.divBallot );
 
     this.object = new THREE.CSS3DObject( this.div );
@@ -262,8 +294,8 @@ function init() {
 		var buttonTally = document.getElementById( 'tally' );
 		buttonTally.addEventListener( 'click', function ( event ) {
 
-        console.log("Tallying scores.");
-        updateScores();
+        // console.log("Tallying scores.");
+        // updateScores();
 
 		}, false );
 
@@ -280,9 +312,14 @@ function init() {
 
     var buttonBack = document.getElementById('back');
     buttonBack.addEventListener('click', function(event) {
-        console.log(currentTile);
         if (currentTile > 0) {
             makeTileCurrent(currentTile-1);
+        }
+        else {
+            for (var i=0; i<targets.rank.length; ++i) {
+                targets.pres[i] = targets.rank[i];
+            }
+		        transform( objects.tiles, targets.pres, 1000 );
         }
         // var elemBanner = document.querySelectorAll('.banner')[0];
         // if (!elemBanner) {
@@ -299,9 +336,14 @@ function init() {
 
     var buttonForward = document.getElementById('forward');
     buttonForward.addEventListener('click', function(event) {
-        console.log(currentTile);
         if (currentTile < numTiles-1) {
             makeTileCurrent(currentTile+1);
+        }
+        else {
+            for (var i=0; i<targets.rank.length; ++i) {
+                targets.pres[i] = targets.rank[i];
+            }
+		        transform( objects.tiles, targets.pres, 1000 );
         }
         // var elemBanner = document.querySelectorAll('.banner')[0];
         // if (!elemBanner) {
